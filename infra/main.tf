@@ -31,11 +31,13 @@ provider "aws" {
 
   endpoints {
     dynamodb = var.localstack_endpoint
+    lambda   = var.localstack_endpoint
+    iam      = var.localstack_endpoint
   }
 }
 
 
-resource "aws_dynamodb_table" "test_table" {
+resource "aws_dynamodb_table" "safenotes" {
   name           = var.dynamodb_table_name
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "id"
@@ -67,4 +69,64 @@ resource "aws_dynamodb_table" "test_table" {
   #   name = "url"
   #   type = "S"
   # }
+}
+
+
+# IAM role for Lambda
+resource "aws_iam_role" "lambda_role_to_access_dynamodb" {
+  name = "lambda_role_to_access_dynamodb"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "lambda.amazonaws.com"
+        }
+      }
+    ]
+  })
+}
+
+# IAM policy for Lambda to access DynamoDB
+resource "aws_iam_role_policy" "lambda_policy" {
+  name = "lambda_dynamodb_policy"
+  role = aws_iam_role.lambda_role_to_access_dynamodb.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:GetItem",
+          "dynamodb:PutItem",
+          "dynamodb:UpdateItem",
+          "dynamodb:DeleteItem",
+          "dynamodb:Scan",
+          "dynamodb:Query"
+        ]
+        Resource = aws_dynamodb_table.safenotes.arn
+      }
+    ]
+  })
+}
+
+# Lambda function
+resource "aws_lambda_function" "crud_lambda" {
+  filename      = "build.zip" # TODO : if the .zip file is outside the current directory we need to add this as prefix ${path.module}
+  function_name = "safenotes"
+  role          = aws_iam_role.lambda_role_to_access_dynamodb.arn
+  handler       = "handler"
+  runtime       = "go1.x"
+
+  source_code_hash = filebase64sha256("build.zip")
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE_NAME = aws_dynamodb_table.safenotes.name
+    }
+  }
 }
