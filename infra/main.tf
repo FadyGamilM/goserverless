@@ -1,24 +1,3 @@
-variable "aws_access_key" {
-    type = string 
-}
-
-variable "aws_secret_access_key" {
-    type = string
-}
-
-variable "aws_region" {
-    type = string
-}
-
-variable "localstack_endpoint" {
-    type = string
-}
-
-variable "dynamodb_table_name" {
-  type = string
-}
-
-
 provider "aws" {
   access_key = var.aws_access_key
   secret_key = var.aws_secret_access_key
@@ -116,13 +95,13 @@ resource "aws_iam_role_policy" "lambda_policy" {
 
 # Lambda function
 resource "aws_lambda_function" "crud_lambda" {
-  filename      = "build.zip" # TODO : if the .zip file is outside the current directory we need to add this as prefix ${path.module}
+  filename      = var.lambda_build_path # TODO : if the .zip file is outside the current directory we need to add this as prefix ${path.module}
   function_name = "safenotes"
   role          = aws_iam_role.lambda_role_to_access_dynamodb.arn
   handler       = "handler"
   runtime       = "go1.x"
 
-  source_code_hash = filebase64sha256("build.zip")
+  source_code_hash = filebase64sha256(var.lambda_build_path)
 
   environment {
     variables = {
