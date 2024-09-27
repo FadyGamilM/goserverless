@@ -1,7 +1,10 @@
 package main
 
-import "log"
+import (
+	goLambda "github.com/FadyGamilM/goserverless/pkg/lambda"
+	"github.com/aws/aws-lambda-go/lambda"
+)
 
 func main() {
-	log.Println("lambda is ready :D ..")
+	lambda.Start(goLambda.LambdaHandler)
 }
