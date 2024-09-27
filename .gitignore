@@ -5,5 +5,5 @@ infra/.terraform.lock.hcl
 .terraform/
 .volume
 .volume/*
-./src/build/safenotes.zip
+./src/build/*
 
