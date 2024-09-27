@@ -1,4 +1,4 @@
-package lambda
+package golambda
 
 type Note struct {
 	Id        string `json:"id"`

@@ -18,7 +18,7 @@ variable "dynamodb_table_name" {
   type = string
 }
 
+// if we need to add defualt_value and this value contains the $path.module attribute we cannot use it here in variables and access the variable using var.var_name, because this is dynamically and terraform doesn't support this in the default values, instead create a local variable
 variable "lambda_build_path" {
     type = string
-    default = "${path.module}/../../src/lambda/build/safenotes.zip"
 }
